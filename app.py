@@ -17,22 +17,12 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET") or "a-default-secret-key"
 
 # Configure the database
-database_url = os.environ.get("DATABASE_URL")
-# Fix for Render PostgreSQL connection string
-if database_url and database_url.startswith("postgres://"):
-    database_url = database_url.replace("postgres://", "postgresql://", 1)
-
-app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
 }
 db.init_app(app)
-
-# Add a check for database URL
-if not database_url:
-    logger = logging.getLogger(__name__)
-    logger.warning("DATABASE_URL environment variable not set")
 
 # Import functions after app and db are defined
 from database_utils import load_database_schema, verify_query, explain_query
@@ -40,11 +30,10 @@ from sql_generator import generate_sql_from_nl, call_gemini_api as generator_cal
 from sql_corrector import correct_sql_query, call_gemini_api as corrector_call_gemini
 
 
-# Initialize database only if database URL is set
-if os.environ.get("DATABASE_URL"):
-    with app.app_context():
-        import models
-        db.create_all()
+# Initialize database
+with app.app_context():
+    import models
+    db.create_all()
 
 # Update environment variable reference from app context
 if not os.environ.get("GEMINI_API_KEY"):
@@ -536,5 +525,6 @@ def sql_buddy_tip():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    # app.run(host="0.0.0.0", port=5000, debug=True)
+        port = int(os.environ.get("PORT", 5000))
+        app.run(host="0.0.0.0", port=port, debug=False)

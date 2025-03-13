@@ -324,7 +324,7 @@ def learning_path_page():
 @app.route('/favorites')
 def favorites_page():
     """Render the saved/favorite queries page."""
-    return render_template('favorites.html')
+    return render_template('favourites.html')
 
 @app.route('/api/save-query', methods=['POST'])
 def save_query():
@@ -525,4 +525,6 @@ def sql_buddy_tip():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    # app.run(host="0.0.0.0", port=5000, debug=True)
+        port = int(os.environ.get("PORT", 5000))
+        app.run(host="0.0.0.0", port=port, debug=False)

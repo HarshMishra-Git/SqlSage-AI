@@ -1,0 +1,10 @@
+os
+json
+requests
+logging
+sqlalchemy
+datetime
+python-dotenv
+psycopg2
+flask_sqlalchemy
+flask

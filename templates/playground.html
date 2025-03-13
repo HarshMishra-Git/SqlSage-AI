@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Query Playground - SQL Query Assistant</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.5/lib/codemirror.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.5/theme/dracula.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-database-gear"></i> SQL Query Assistant
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/generate">Generate SQL</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/correct">Correct SQL</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/playground">
+                            <i class="bi bi-code-square"></i> Query Playground
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/learning-path">
+                            <i class="bi bi-mortarboard"></i> Learning Path
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/favorites">
+                            <i class="bi bi-star"></i> Favorites
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="bi bi-code-square me-2"></i>
+                            <h5 class="mb-0 d-inline">SQL Playground</h5>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-light" id="copyBtn">
+                                <i class="bi bi-clipboard"></i> Copy
+                            </button>
+                            <button class="btn btn-sm btn-outline-light" id="clearBtn">
+                                <i class="bi bi-eraser"></i> Clear
+                            </button>
+                            <button class="btn btn-sm btn-outline-success" id="saveBtn">
+                                <i class="bi bi-bookmark-plus"></i> Save
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <textarea id="sqlEditor" class="form-control"></textarea>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <button id="runQueryBtn" class="btn btn-primary">
+                                <i class="bi bi-play-fill"></i> Run Query
+                            </button>
+                            <div class="btn-group">
+                                <button id="verifyBtn" class="btn btn-outline-info">
+                                    <i class="bi bi-check-circle"></i> Verify Syntax
+                                </button>
+                                <button id="explainBtn" class="btn btn-outline-info">
+                                    <i class="bi bi-graph-up"></i> Explain Query
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-4 d-none" id="resultCard">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h5 class="mb-0"><i class="bi bi-table me-2"></i>Query Results</h5>
+                        <button class="btn btn-sm btn-outline-light" id="copyResultBtn">
+                            <i class="bi bi-clipboard"></i> Copy
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="resultSection" class="query-result">
+                            <div class="text-center py-5">
+                                <p>Run a query to see results here</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-database me-2"></i>Database Schema</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="accordion" id="schemaAccordion">
+                            <div class="text-center py-4" id="schemaLoader">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-3">Loading schema...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h5 class="mb-0"><i class="bi bi-robot me-2"></i>SQL Buddy</h5>
+                        <button class="btn btn-sm btn-outline-primary" id="askBuddyBtn">
+                            <i class="bi bi-question-circle"></i> Ask for Help
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="buddyChat" class="buddy-chat">
+                            <div class="buddy-message">
+                                <i class="bi bi-robot me-2"></i>
+                                <div class="buddy-message-content">
+                                    <p>Hello! I'm SQL Buddy. I can help you with SQL queries. Edit a query in the playground and click "Ask for Help" if you need assistance.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-group mt-3 d-none" id="buddyInputGroup">
+                            <input type="text" class="form-control" placeholder="Ask SQL Buddy..." id="buddyInput">
+                            <button class="btn btn-outline-primary" type="button" id="sendToBuddyBtn">
+                                <i class="bi bi-send"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Query Modal -->
+    <div class="modal fade" id="saveQueryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Save Query</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="queryTitle" class="form-label">Query Title</label>
+                        <input type="text" class="form-control" id="queryTitle" placeholder="Enter a descriptive title">
+                    </div>
+                    <div class="mb-3">
+                        <label for="queryDescription" class="form-label">Description (Optional)</label>
+                        <textarea class="form-control" id="queryDescription" rows="2" placeholder="What does this query do?"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="queryTags" class="form-label">Tags (Optional, comma-separated)</label>
+                        <input type="text" class="form-control" id="queryTags" placeholder="e.g., reporting, sales, analysis">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Complexity</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="complexity" id="beginner" value="beginner" autocomplete="off" checked>
+                            <label class="btn btn-outline-success" for="beginner">Beginner</label>
+                            
+                            <input type="radio" class="btn-check" name="complexity" id="intermediate" value="intermediate" autocomplete="off">
+                            <label class="btn btn-outline-warning" for="intermediate">Intermediate</label>
+                            
+                            <input type="radio" class="btn-check" name="complexity" id="advanced" value="advanced" autocomplete="off">
+                            <label class="btn btn-outline-danger" for="advanced">Advanced</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveQueryBtn">Save Query</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay d-none" id="loadingOverlay">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3 text-light">Processing...</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.5/lib/codemirror.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.5/mode/sql/sql.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize CodeMirror for SQL editor
+            const sqlEditorTextarea = document.getElementById('sqlEditor');
+            const sqlEditor = CodeMirror.fromTextArea(sqlEditorTextarea, {
+                mode: 'text/x-sql',
+                theme: 'dracula',
+                lineNumbers: true,
+                indentWithTabs: true,
+                smartIndent: true,
+                lineWrapping: true,
+                matchBrackets: true,
+                autoCloseBrackets: true,
+                viewportMargin: Infinity
+            });
+            
+            // Elements
+            const runQueryBtn = document.getElementById('runQueryBtn');
+            const verifyBtn = document.getElementById('verifyBtn');
+            const explainBtn = document.getElementById('explainBtn');
+            const resultSection = document.getElementById('resultSection');
+            const resultCard = document.getElementById('resultCard');
+            const copyBtn = document.getElementById('copyBtn');
+            const copyResultBtn = document.getElementById('copyResultBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const schemaAccordion = document.getElementById('schemaAccordion');
+            const schemaLoader = document.getElementById('schemaLoader');
+            
+            // SQL Buddy
+            const buddyChat = document.getElementById('buddyChat');
+            const askBuddyBtn = document.getElementById('askBuddyBtn');
+            const buddyInputGroup = document.getElementById('buddyInputGroup');
+            const buddyInput = document.getElementById('buddyInput');
+            const sendToBuddyBtn = document.getElementById('sendToBuddyBtn');
+            
+            // Save Modal
+            const saveQueryModal = new bootstrap.Modal(document.getElementById('saveQueryModal'));
+            const queryTitle = document.getElementById('queryTitle');
+            const queryDescription = document.getElementById('queryDescription');
+            const queryTags = document.getElementById('queryTags');
+            const saveQueryBtn = document.getElementById('saveQueryBtn');
+            
+            // Check for query from localStorage (passed from other pages)
+            const storedQuery = localStorage.getItem('playgroundQuery');
+            if (storedQuery) {
+                sqlEditor.setValue(storedQuery);
+                localStorage.removeItem('playgroundQuery'); // Clear after use
+                
+                // Auto-run the query if it exists
+                setTimeout(() => {
+                    runQueryBtn.click();
+                }, 1000);
+            }
+            
+            // Run query
+            runQueryBtn.addEventListener('click', function() {
+                const query = sqlEditor.getValue().trim();
+                if (!query) {
+                    showNotification('Please enter a SQL query', 'warning');
+                    return;
+                }
+                
+                // Show loading overlay
+                loadingOverlay.classList.remove('d-none');
+                
+                // TODO: Replace with actual query execution endpoint
+                // For now, we'll just simulate a successful query
+                setTimeout(() => {
+                    loadingOverlay.classList.add('d-none');
+                    
+                    // Show result card
+                    resultCard.classList.remove('d-none');
+                    
+                    // Simulate query results
+                    resultSection.innerHTML = `
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            This is a simulated result. In the full implementation, this would display the actual query results.
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>id</th>
+                                        <th>name</th>
+                                        <th>email</th>
+                                        <th>created_at</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>John Doe</td>
+                                        <td>john@example.com</td>
+                                        <td>2023-01-15</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>Jane Smith</td>
+                                        <td>jane@example.com</td>
+                                        <td>2023-02-20</td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td>Bob Johnson</td>
+                                        <td>bob@example.com</td>
+                                        <td>2023-03-10</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">Query executed in 0.023 seconds. 3 rows returned.</small>
+                        </div>
+                    `;
+                    
+                    // Scroll to results
+                    resultCard.scrollIntoView({ behavior: 'smooth' });
+                }, 800);
+            });
+            
+            // Verify SQL syntax
+            verifyBtn.addEventListener('click', function() {
+                const query = sqlEditor.getValue().trim();
+                if (!query) {
+                    showNotification('Please enter a SQL query', 'warning');
+                    return;
+                }
+                
+                loadingOverlay.classList.remove('d-none');
+                
+                fetch('/api/verify-query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query: query })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loadingOverlay.classList.add('d-none');
+                    
+                    if (data.is_valid) {
+                        showNotification('SQL syntax is valid', 'success');
+                    } else {
+                        showNotification('SQL syntax error: ' + data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    loadingOverlay.classList.add('d-none');
+                    console.error('Error:', error);
+                    showNotification('Error verifying SQL syntax', 'error');
+                });
+            });
+            
+            // Explain query
+            explainBtn.addEventListener('click', function() {
+                const query = sqlEditor.getValue().trim();
+                if (!query) {
+                    showNotification('Please enter a SQL query', 'warning');
+                    return;
+                }
+                
+                loadingOverlay.classList.remove('d-none');
+                
+                fetch('/api/explain-query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query: query })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loadingOverlay.classList.add('d-none');
+                    
+                    if (data.success) {
+                        // Show result card
+                        resultCard.classList.remove('d-none');
+                        
+                        // Format the explanation
+                        resultSection.innerHTML = `
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Query Execution Plan
+                            </div>
+                            <pre class="explain-result">${data.explanation}</pre>
+                        `;
+                        
+                        // Scroll to results
+                        resultCard.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        showNotification('Error: ' + data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    loadingOverlay.classList.add('d-none');
+                    console.error('Error:', error);
+                    showNotification('Error explaining query', 'error');
+                });
+            });
+            
+            // Copy SQL to clipboard
+            copyBtn.addEventListener('click', function() {
+                const sqlCode = sqlEditor.getValue();
+                navigator.clipboard.writeText(sqlCode)
+                    .then(() => {
+                        showNotification('SQL copied to clipboard', 'success');
+                    })
+                    .catch(err => {
+                        console.error('Failed to copy: ', err);
+                        showNotification('Failed to copy SQL', 'error');
+                    });
+            });
+            
+            // Copy result to clipboard
+            copyResultBtn.addEventListener('click', function() {
+                const resultText = resultSection.innerText;
+                navigator.clipboard.writeText(resultText)
+                    .then(() => {
+                        showNotification('Results copied to clipboard', 'success');
+                    })
+                    .catch(err => {
+                        console.error('Failed to copy: ', err);
+                        showNotification('Failed to copy results', 'error');
+                    });
+            });
+            
+            // Clear editor
+            clearBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to clear the editor?')) {
+                    sqlEditor.setValue('');
+                    resultCard.classList.add('d-none');
+                }
+            });
+            
+            // Open save modal
+            saveBtn.addEventListener('click', function() {
+                const query = sqlEditor.getValue().trim();
+                if (!query) {
+                    showNotification('Please enter a SQL query to save', 'warning');
+                    return;
+                }
+                
+                // Reset modal fields
+                queryTitle.value = '';
+                queryDescription.value = '';
+                queryTags.value = '';
+                document.getElementById('beginner').checked = true;
+                
+                saveQueryModal.show();
+            });
+            
+            // Save query
+            saveQueryBtn.addEventListener('click', function() {
+                const title = queryTitle.value.trim();
+                if (!title) {
+                    showNotification('Please enter a title for your query', 'warning');
+                    return;
+                }
+                
+                const complexity = document.querySelector('input[name="complexity"]:checked').value;
+                
+                // Get the query and metadata
+                const query = {
+                    query_text: sqlEditor.getValue().trim(),
+                    title: title,
+                    nl_query: queryDescription.value.trim(),
+                    tags: queryTags.value.trim(),
+                    complexity: complexity
+                };
+                
+                loadingOverlay.classList.remove('d-none');
+                
+                // Save to API
+                fetch('/api/save-query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(query)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loadingOverlay.classList.add('d-none');
+                    saveQueryModal.hide();
+                    
+                    if (data.success) {
+                        showNotification('Query saved successfully', 'success');
+                    } else {
+                        showNotification('Error saving query: ' + data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    loadingOverlay.classList.add('d-none');
+                    saveQueryModal.hide();
+                    console.error('Error:', error);
+                    showNotification('Error saving query', 'error');
+                });
+            });
+            
+            // Load database schema
+            function loadDatabaseSchema() {
+                fetch('/api/schema')
+                    .then(response => response.json())
+                    .then(data => {
+                        schemaLoader.classList.add('d-none');
+                        
+                        // Create accordions for tables
+                        let html = '';
+                        for (const tableName in data) {
+                            const columns = data[tableName];
+                            const tableId = tableName.replace(/[^a-zA-Z0-9]/g, '_');
+                            
+                            html += `
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${tableId}" aria-expanded="false" aria-controls="${tableId}">
+                                            <i class="bi bi-table me-2"></i>
+                                            ${tableName}
+                                        </button>
+                                    </h2>
+                                    <div id="${tableId}" class="accordion-collapse collapse" aria-labelledby="${tableId}">
+                                        <div class="accordion-body p-0">
+                                            <table class="table table-sm table-dark mb-0">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Column</th>
+                                                        <th>Type</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                            `;
+                            
+                            for (const colName in columns) {
+                                const colType = columns[colName];
+                                html += `
+                                    <tr>
+                                        <td>${colName}</td>
+                                        <td><span class="badge bg-secondary">${colType}</span></td>
+                                    </tr>
+                                `;
+                            }
+                            
+                            html += `
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        
+                        schemaAccordion.innerHTML = html;
+                    })
+                    .catch(error => {
+                        console.error('Error loading schema:', error);
+                        schemaLoader.innerHTML = `
+                            <div class="alert alert-danger">
+                                Error loading database schema. Please refresh the page.
+                            </div>
+                        `;
+                    });
+            }
+            
+            // Load schema on page load
+            loadDatabaseSchema();
+            
+            // Initialize SQL Buddy
+            initSqlBuddy();
+            
+            // Ask Buddy
+            askBuddyBtn.addEventListener('click', function() {
+                const query = sqlEditor.getValue().trim();
+                
+                // Show the input field
+                buddyInputGroup.classList.remove('d-none');
+                buddyInput.focus();
+                
+                // If there's a query, add it as context
+                if (query) {
+                    // Add the query as a message from the user
+                    addMessage(query, true);
+                    
+                    // Send to the SQL Buddy API
+                    fetch('/api/sql-buddy-tip', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ query: query })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.tip) {
+                            addMessage(data.tip);
+                        } else {
+                            addMessage("I don't have any specific tips for this query. Feel free to ask me a question!");
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        addMessage("Sorry, I encountered an error analyzing your query. Please try again or ask a specific question.");
+                    });
+                }
+            });
+            
+            // Send message to Buddy
+            sendToBuddyBtn.addEventListener('click', handleUserInput);
+            
+            buddyInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    handleUserInput();
+                }
+            });
+            
+            // Function to handle user input to SQL Buddy
+            function handleUserInput() {
+                const userMessage = buddyInput.value.trim();
+                if (!userMessage) return;
+                
+                // Clear input
+                buddyInput.value = '';
+                
+                // Add user message to chat
+                addMessage(userMessage, true);
+                
+                // Get current query as context
+                const queryContext = sqlEditor.getValue().trim();
+                
+                // Send to API
+                fetch('/api/sql-buddy-tip', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        query: queryContext,
+                        user_message: userMessage 
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.tip) {
+                        addMessage(data.tip);
+                    } else {
+                        addMessage("I'm not sure how to help with that specific question. Try asking something about SQL syntax, query optimization, or database concepts.");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    addMessage("Sorry, I encountered an error processing your question. Please try again.");
+                });
+            }
+            
+            // Function to add message to SQL Buddy chat
+            function addMessage(text, isUser = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = isUser ? 'buddy-message buddy-user-message' : 'buddy-message';
+                
+                let messageHTML = '';
+                if (isUser) {
+                    messageHTML = `
+                        <i class="bi bi-person-circle me-2"></i>
+                        <div class="buddy-message-content">
+                            <p>${text}</p>
+                        </div>
+                    `;
+                } else {
+                    messageHTML = `
+                        <i class="bi bi-robot me-2"></i>
+                        <div class="buddy-message-content">
+                            <p>${text}</p>
+                        </div>
+                    `;
+                }
+                
+                messageDiv.innerHTML = messageHTML;
+                buddyChat.appendChild(messageDiv);
+                
+                // Scroll to bottom
+                buddyChat.scrollTop = buddyChat.scrollHeight;
+            }
+        });
+    </script>
+</body>
+</html>

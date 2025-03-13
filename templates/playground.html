@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SqlSage AI - Playground</title>
+    <title>Query Playground - SQL Query Assistant</title>
     <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.5/lib/codemirror.css">
@@ -14,7 +14,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <i class="bi bi-database-gear"></i> SqlSage AI
+                <i class="bi bi-database-gear"></i> SQL Query Assistant
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -88,7 +88,7 @@
                         </div>
                     </div>
                 </div>
-
+                
                 <div class="card mt-4 d-none" id="resultCard">
                     <div class="card-header d-flex align-items-center justify-content-between">
                         <h5 class="mb-0"><i class="bi bi-table me-2"></i>Query Results</h5>
@@ -105,7 +105,7 @@
                     </div>
                 </div>
             </div>
-
+            
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-header">
@@ -122,7 +122,7 @@
                         </div>
                     </div>
                 </div>
-
+                
                 <div class="card mt-4">
                     <div class="card-header d-flex align-items-center justify-content-between">
                         <h5 class="mb-0"><i class="bi bi-robot me-2"></i>SQL Buddy</h5>
@@ -177,10 +177,10 @@
                         <div class="btn-group w-100" role="group">
                             <input type="radio" class="btn-check" name="complexity" id="beginner" value="beginner" autocomplete="off" checked>
                             <label class="btn btn-outline-success" for="beginner">Beginner</label>
-
+                            
                             <input type="radio" class="btn-check" name="complexity" id="intermediate" value="intermediate" autocomplete="off">
                             <label class="btn btn-outline-warning" for="intermediate">Intermediate</label>
-
+                            
                             <input type="radio" class="btn-check" name="complexity" id="advanced" value="advanced" autocomplete="off">
                             <label class="btn btn-outline-danger" for="advanced">Advanced</label>
                         </div>
@@ -220,7 +220,7 @@
                 autoCloseBrackets: true,
                 viewportMargin: Infinity
             });
-
+            
             // Elements
             const runQueryBtn = document.getElementById('runQueryBtn');
             const verifyBtn = document.getElementById('verifyBtn');
@@ -234,33 +234,33 @@
             const loadingOverlay = document.getElementById('loadingOverlay');
             const schemaAccordion = document.getElementById('schemaAccordion');
             const schemaLoader = document.getElementById('schemaLoader');
-
+            
             // SQL Buddy
             const buddyChat = document.getElementById('buddyChat');
             const askBuddyBtn = document.getElementById('askBuddyBtn');
             const buddyInputGroup = document.getElementById('buddyInputGroup');
             const buddyInput = document.getElementById('buddyInput');
             const sendToBuddyBtn = document.getElementById('sendToBuddyBtn');
-
+            
             // Save Modal
             const saveQueryModal = new bootstrap.Modal(document.getElementById('saveQueryModal'));
             const queryTitle = document.getElementById('queryTitle');
             const queryDescription = document.getElementById('queryDescription');
             const queryTags = document.getElementById('queryTags');
             const saveQueryBtn = document.getElementById('saveQueryBtn');
-
+            
             // Check for query from localStorage (passed from other pages)
             const storedQuery = localStorage.getItem('playgroundQuery');
             if (storedQuery) {
                 sqlEditor.setValue(storedQuery);
                 localStorage.removeItem('playgroundQuery'); // Clear after use
-
+                
                 // Auto-run the query if it exists
                 setTimeout(() => {
                     runQueryBtn.click();
                 }, 1000);
             }
-
+            
             // Run query
             runQueryBtn.addEventListener('click', function() {
                 const query = sqlEditor.getValue().trim();
@@ -268,18 +268,18 @@
                     showNotification('Please enter a SQL query', 'warning');
                     return;
                 }
-
+                
                 // Show loading overlay
                 loadingOverlay.classList.remove('d-none');
-
+                
                 // TODO: Replace with actual query execution endpoint
                 // For now, we'll just simulate a successful query
                 setTimeout(() => {
                     loadingOverlay.classList.add('d-none');
-
+                    
                     // Show result card
                     resultCard.classList.remove('d-none');
-
+                    
                     // Simulate query results
                     resultSection.innerHTML = `
                         <div class="alert alert-info">
@@ -322,12 +322,12 @@
                             <small class="text-muted">Query executed in 0.023 seconds. 3 rows returned.</small>
                         </div>
                     `;
-
+                    
                     // Scroll to results
                     resultCard.scrollIntoView({ behavior: 'smooth' });
                 }, 800);
             });
-
+            
             // Verify SQL syntax
             verifyBtn.addEventListener('click', function() {
                 const query = sqlEditor.getValue().trim();
@@ -335,9 +335,9 @@
                     showNotification('Please enter a SQL query', 'warning');
                     return;
                 }
-
+                
                 loadingOverlay.classList.remove('d-none');
-
+                
                 fetch('/api/verify-query', {
                     method: 'POST',
                     headers: {
@@ -348,7 +348,7 @@
                 .then(response => response.json())
                 .then(data => {
                     loadingOverlay.classList.add('d-none');
-
+                    
                     if (data.is_valid) {
                         showNotification('SQL syntax is valid', 'success');
                     } else {
@@ -361,7 +361,7 @@
                     showNotification('Error verifying SQL syntax', 'error');
                 });
             });
-
+            
             // Explain query
             explainBtn.addEventListener('click', function() {
                 const query = sqlEditor.getValue().trim();
@@ -369,9 +369,9 @@
                     showNotification('Please enter a SQL query', 'warning');
                     return;
                 }
-
+                
                 loadingOverlay.classList.remove('d-none');
-
+                
                 fetch('/api/explain-query', {
                     method: 'POST',
                     headers: {
@@ -382,11 +382,11 @@
                 .then(response => response.json())
                 .then(data => {
                     loadingOverlay.classList.add('d-none');
-
+                    
                     if (data.success) {
                         // Show result card
                         resultCard.classList.remove('d-none');
-
+                        
                         // Format the explanation
                         resultSection.innerHTML = `
                             <div class="alert alert-info">
@@ -395,7 +395,7 @@
                             </div>
                             <pre class="explain-result">${data.explanation}</pre>
                         `;
-
+                        
                         // Scroll to results
                         resultCard.scrollIntoView({ behavior: 'smooth' });
                     } else {
@@ -408,7 +408,7 @@
                     showNotification('Error explaining query', 'error');
                 });
             });
-
+            
             // Copy SQL to clipboard
             copyBtn.addEventListener('click', function() {
                 const sqlCode = sqlEditor.getValue();
@@ -421,7 +421,7 @@
                         showNotification('Failed to copy SQL', 'error');
                     });
             });
-
+            
             // Copy result to clipboard
             copyResultBtn.addEventListener('click', function() {
                 const resultText = resultSection.innerText;
@@ -434,7 +434,7 @@
                         showNotification('Failed to copy results', 'error');
                     });
             });
-
+            
             // Clear editor
             clearBtn.addEventListener('click', function() {
                 if (confirm('Are you sure you want to clear the editor?')) {
@@ -442,7 +442,7 @@
                     resultCard.classList.add('d-none');
                 }
             });
-
+            
             // Open save modal
             saveBtn.addEventListener('click', function() {
                 const query = sqlEditor.getValue().trim();
@@ -450,16 +450,16 @@
                     showNotification('Please enter a SQL query to save', 'warning');
                     return;
                 }
-
+                
                 // Reset modal fields
                 queryTitle.value = '';
                 queryDescription.value = '';
                 queryTags.value = '';
                 document.getElementById('beginner').checked = true;
-
+                
                 saveQueryModal.show();
             });
-
+            
             // Save query
             saveQueryBtn.addEventListener('click', function() {
                 const title = queryTitle.value.trim();
@@ -467,9 +467,9 @@
                     showNotification('Please enter a title for your query', 'warning');
                     return;
                 }
-
+                
                 const complexity = document.querySelector('input[name="complexity"]:checked').value;
-
+                
                 // Get the query and metadata
                 const query = {
                     query_text: sqlEditor.getValue().trim(),
@@ -478,9 +478,9 @@
                     tags: queryTags.value.trim(),
                     complexity: complexity
                 };
-
+                
                 loadingOverlay.classList.remove('d-none');
-
+                
                 // Save to API
                 fetch('/api/save-query', {
                     method: 'POST',
@@ -493,7 +493,7 @@
                 .then(data => {
                     loadingOverlay.classList.add('d-none');
                     saveQueryModal.hide();
-
+                    
                     if (data.success) {
                         showNotification('Query saved successfully', 'success');
                     } else {
@@ -507,20 +507,20 @@
                     showNotification('Error saving query', 'error');
                 });
             });
-
+            
             // Load database schema
             function loadDatabaseSchema() {
                 fetch('/api/schema')
                     .then(response => response.json())
                     .then(data => {
                         schemaLoader.classList.add('d-none');
-
+                        
                         // Create accordions for tables
                         let html = '';
                         for (const tableName in data) {
                             const columns = data[tableName];
                             const tableId = tableName.replace(/[^a-zA-Z0-9]/g, '_');
-
+                            
                             html += `
                                 <div class="accordion-item">
                                     <h2 class="accordion-header">
@@ -540,7 +540,7 @@
                                                 </thead>
                                                 <tbody>
                             `;
-
+                            
                             for (const colName in columns) {
                                 const colType = columns[colName];
                                 html += `
@@ -550,7 +550,7 @@
                                     </tr>
                                 `;
                             }
-
+                            
                             html += `
                                                 </tbody>
                                             </table>
@@ -559,7 +559,7 @@
                                 </div>
                             `;
                         }
-
+                        
                         schemaAccordion.innerHTML = html;
                     })
                     .catch(error => {
@@ -571,26 +571,26 @@
                         `;
                     });
             }
-
+            
             // Load schema on page load
             loadDatabaseSchema();
-
+            
             // Initialize SQL Buddy
             initSqlBuddy();
-
+            
             // Ask Buddy
             askBuddyBtn.addEventListener('click', function() {
                 const query = sqlEditor.getValue().trim();
-
+                
                 // Show the input field
                 buddyInputGroup.classList.remove('d-none');
                 buddyInput.focus();
-
+                
                 // If there's a query, add it as context
                 if (query) {
                     // Add the query as a message from the user
                     addMessage(query, true);
-
+                    
                     // Send to the SQL Buddy API
                     fetch('/api/sql-buddy-tip', {
                         method: 'POST',
@@ -613,30 +613,30 @@
                     });
                 }
             });
-
+            
             // Send message to Buddy
             sendToBuddyBtn.addEventListener('click', handleUserInput);
-
+            
             buddyInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     handleUserInput();
                 }
             });
-
+            
             // Function to handle user input to SQL Buddy
             function handleUserInput() {
                 const userMessage = buddyInput.value.trim();
                 if (!userMessage) return;
-
+                
                 // Clear input
                 buddyInput.value = '';
-
+                
                 // Add user message to chat
                 addMessage(userMessage, true);
-
+                
                 // Get current query as context
                 const queryContext = sqlEditor.getValue().trim();
-
+                
                 // Send to API
                 fetch('/api/sql-buddy-tip', {
                     method: 'POST',
@@ -661,12 +661,12 @@
                     addMessage("Sorry, I encountered an error processing your question. Please try again.");
                 });
             }
-
+            
             // Function to add message to SQL Buddy chat
             function addMessage(text, isUser = false) {
                 const messageDiv = document.createElement('div');
                 messageDiv.className = isUser ? 'buddy-message buddy-user-message' : 'buddy-message';
-
+                
                 let messageHTML = '';
                 if (isUser) {
                     messageHTML = `
@@ -683,10 +683,10 @@
                         </div>
                     `;
                 }
-
+                
                 messageDiv.innerHTML = messageHTML;
                 buddyChat.appendChild(messageDiv);
-
+                
                 // Scroll to bottom
                 buddyChat.scrollTop = buddyChat.scrollHeight;
             }

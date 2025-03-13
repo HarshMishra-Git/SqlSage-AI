@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generate SQL from Natural Language - SQL Query Assistant</title>
+    <title>SqlSage AI</title>
     <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.5/lib/codemirror.css">
@@ -14,7 +14,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <i class="bi bi-database-gear"></i> SQL Query Assistant
+                <i class="bi bi-database-gear"></i> SqlSage AI
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -166,7 +166,7 @@
                 readOnly: true,
                 viewportMargin: Infinity
             });
-            
+
             // Generate form submission
             const generateForm = document.getElementById('generateForm');
             const nlQuery = document.getElementById('nlQuery');
@@ -179,10 +179,10 @@
             const playgroundBtn = document.getElementById('playgroundBtn');
             const clearBtn = document.getElementById('clearBtn');
             const complexityIndicator = document.getElementById('complexityIndicator');
-            
+
             // Example queries
             const exampleQueries = document.querySelectorAll('.example-query');
-            
+
             exampleQueries.forEach(example => {
                 example.addEventListener('click', function() {
                     nlQuery.value = this.textContent.trim();
@@ -192,13 +192,13 @@
                     nlQuery.focus();
                 });
             });
-            
+
             // Clear form
             clearBtn.addEventListener('click', function() {
                 nlQuery.value = '';
                 resultSection.classList.add('d-none');
             });
-            
+
             // Copy SQL to clipboard
             copyBtn.addEventListener('click', function() {
                 const sqlCode = sqlEditor.getValue();
@@ -215,49 +215,49 @@
                         console.error('Failed to copy: ', err);
                     });
             });
-            
+
             // Save query to favorites
             saveBtn.addEventListener('click', function() {
                 const sqlQuery = sqlEditor.getValue();
                 const nlQueryText = originalQuery.textContent;
-                
+
                 if (!sqlQuery) {
                     showNotification('No SQL query to save', 'warning');
                     return;
                 }
-                
+
                 saveQueryToFavorites(sqlQuery, nlQueryText, function(data) {
                     showNotification('Query saved to favorites!', 'success');
                 });
             });
-            
+
             // Open in playground
             playgroundBtn.addEventListener('click', function() {
                 const sqlQuery = sqlEditor.getValue();
-                
+
                 if (!sqlQuery) {
                     showNotification('No SQL query to send to playground', 'warning');
                     return;
                 }
-                
+
                 // Store in localStorage for the playground to access
                 localStorage.setItem('playgroundQuery', sqlQuery);
                 window.location.href = '/playground';
             });
-            
+
             // Form submission
             generateForm.addEventListener('submit', function(e) {
                 e.preventDefault();
-                
+
                 const query = nlQuery.value.trim();
                 if (!query) {
                     alert('Please enter a natural language query');
                     return;
                 }
-                
+
                 // Show loading overlay
                 loadingOverlay.classList.remove('d-none');
-                
+
                 // Call API to generate SQL
                 fetch('/api/generate', {
                     method: 'POST',
@@ -275,30 +275,30 @@
                 .then(data => {
                     // Hide loading overlay
                     loadingOverlay.classList.add('d-none');
-                    
+
                     // Display the result
                     sqlEditor.setValue(data.sql_query);
                     originalQuery.textContent = data.nl_query;
                     tokenCount.textContent = `${data.token_count} tokens`;
-                    
+
                     // Show complexity indicator
                     if (data.complexity) {
                         complexityIndicator.innerHTML = getComplexityBadge(data.complexity);
                     }
-                    
+
                     // Show result section
                     resultSection.classList.remove('d-none');
-                    
+
                     // Refresh CodeMirror (important after changing content)
                     sqlEditor.refresh();
-                    
+
                     // Scroll to result
                     resultSection.scrollIntoView({ behavior: 'smooth' });
                 })
                 .catch(error => {
                     // Hide loading overlay
                     loadingOverlay.classList.add('d-none');
-                    
+
                     console.error('Error:', error);
                     alert('Error generating SQL query. Please try again.');
                 });

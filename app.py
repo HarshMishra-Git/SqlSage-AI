@@ -162,8 +162,13 @@ def init_learning_path():
 # Routes
 @app.route('/')
 def index():
-    """Render the home page."""
+    """Render the landing page."""
     return render_template('index.html')
+
+@app.route('/main')
+def main():
+    """Render the main app page."""
+    return render_template('main.html')
 
 @app.route('/generate')
 def generate_page():

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Correct SQL - SQL Query Assistant</title>
+    <title>SqlSage AI - Correct SQL</title>
     <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.5/lib/codemirror.css">
@@ -14,7 +14,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <i class="bi bi-database-gear"></i> SQL Query Assistant
+                <i class="bi bi-database-gear"></i> SqlSage AI
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -112,12 +112,12 @@
                         <div id="originalQueryContainer" class="mb-4">
                             <textarea id="originalSql" class="form-control" readonly></textarea>
                         </div>
-                        
+
                         <h6 class="mb-3">Corrected Query:</h6>
                         <div id="correctedQueryContainer">
                             <textarea id="correctedSql" class="form-control"></textarea>
                         </div>
-                        
+
                         <div class="alert alert-info mt-4" id="correctionNotes">
                             <i class="bi bi-info-circle me-2"></i>
                             <span id="notesText">Corrections have been applied to fix issues in your SQL query.</span>
@@ -145,14 +145,14 @@
             const incorrectSqlTextarea = document.getElementById('incorrectSql');
             const originalSqlTextarea = document.getElementById('originalSql');
             const correctedSqlTextarea = document.getElementById('correctedSql');
-            
+
             const incorrectSqlEditor = CodeMirror.fromTextArea(incorrectSqlTextarea, {
                 mode: 'text/x-sql',
                 theme: 'dracula',
                 lineNumbers: true,
                 viewportMargin: Infinity
             });
-            
+
             const originalSqlEditor = CodeMirror.fromTextArea(originalSqlTextarea, {
                 mode: 'text/x-sql',
                 theme: 'dracula',
@@ -160,7 +160,7 @@
                 readOnly: true,
                 viewportMargin: Infinity
             });
-            
+
             const correctedSqlEditor = CodeMirror.fromTextArea(correctedSqlTextarea, {
                 mode: 'text/x-sql',
                 theme: 'dracula',
@@ -168,7 +168,7 @@
                 readOnly: true,
                 viewportMargin: Infinity
             });
-            
+
             // Form elements
             const correctForm = document.getElementById('correctForm');
             const resultSection = document.getElementById('resultSection');
@@ -180,13 +180,13 @@
             const clearBtn = document.getElementById('clearBtn');
             const notesText = document.getElementById('notesText');
             const complexityIndicator = document.getElementById('complexityIndicator');
-            
+
             // Clear form
             clearBtn.addEventListener('click', function() {
                 incorrectSqlEditor.setValue('');
                 resultSection.classList.add('d-none');
             });
-            
+
             // Copy SQL to clipboard
             copyBtn.addEventListener('click', function() {
                 const sqlCode = correctedSqlEditor.getValue();
@@ -203,48 +203,48 @@
                         console.error('Failed to copy: ', err);
                     });
             });
-            
+
             // Save query to favorites
             saveBtn.addEventListener('click', function() {
                 const sqlQuery = correctedSqlEditor.getValue();
-                
+
                 if (!sqlQuery) {
                     showNotification('No SQL query to save', 'warning');
                     return;
                 }
-                
+
                 saveQueryToFavorites(sqlQuery, '', function(data) {
                     showNotification('Query saved to favorites!', 'success');
                 });
             });
-            
+
             // Open in playground
             playgroundBtn.addEventListener('click', function() {
                 const sqlQuery = correctedSqlEditor.getValue();
-                
+
                 if (!sqlQuery) {
                     showNotification('No SQL query to send to playground', 'warning');
                     return;
                 }
-                
+
                 // Store in localStorage for the playground to access
                 localStorage.setItem('playgroundQuery', sqlQuery);
                 window.location.href = '/playground';
             });
-            
+
             // Form submission
             correctForm.addEventListener('submit', function(e) {
                 e.preventDefault();
-                
+
                 const query = incorrectSqlEditor.getValue().trim();
                 if (!query) {
                     alert('Please enter a SQL query to correct');
                     return;
                 }
-                
+
                 // Show loading overlay
                 loadingOverlay.classList.remove('d-none');
-                
+
                 // Call API to correct SQL
                 fetch('/api/correct', {
                     method: 'POST',
@@ -262,42 +262,42 @@
                 .then(data => {
                     // Hide loading overlay
                     loadingOverlay.classList.add('d-none');
-                    
+
                     // Display the result
                     originalSqlEditor.setValue(data.incorrect_sql);
                     correctedSqlEditor.setValue(data.corrected_sql);
                     tokenCount.textContent = `${data.token_count} tokens`;
-                    
+
                     // Show complexity indicator if available
                     if (data.complexity) {
                         complexityIndicator.innerHTML = getComplexityBadge(data.complexity);
                     }
-                    
+
                     // Add correction notes if there are differences
                     if (data.incorrect_sql !== data.corrected_sql) {
                         const changes = [];
-                        
+
                         // Simple detection of some common corrections
                         if (data.incorrect_sql.toLowerCase().indexOf('select') === -1 && 
                             data.corrected_sql.toLowerCase().indexOf('select') !== -1) {
                             changes.push('Added missing SELECT statement');
                         }
-                        
+
                         if (data.incorrect_sql.toLowerCase().indexOf('from') === -1 && 
                             data.corrected_sql.toLowerCase().indexOf('from') !== -1) {
                             changes.push('Added missing FROM clause');
                         }
-                        
+
                         if (data.incorrect_sql.toLowerCase().indexOf('where') === -1 && 
                             data.corrected_sql.toLowerCase().indexOf('where') !== -1) {
                             changes.push('Added WHERE clause for filtering');
                         }
-                        
+
                         if (data.incorrect_sql.toLowerCase().indexOf('join') === -1 && 
                             data.corrected_sql.toLowerCase().indexOf('join') !== -1) {
                             changes.push('Added proper JOIN syntax');
                         }
-                        
+
                         if (changes.length > 0) {
                             notesText.innerHTML = 'Corrections applied: ' + changes.join(', ');
                         } else {
@@ -306,21 +306,21 @@
                     } else {
                         notesText.innerHTML = 'Your SQL query appears to be valid already.';
                     }
-                    
+
                     // Show result section
                     resultSection.classList.remove('d-none');
-                    
+
                     // Refresh CodeMirror (important after changing content)
                     originalSqlEditor.refresh();
                     correctedSqlEditor.refresh();
-                    
+
                     // Scroll to result
                     resultSection.scrollIntoView({ behavior: 'smooth' });
                 })
                 .catch(error => {
                     // Hide loading overlay
                     loadingOverlay.classList.add('d-none');
-                    
+
                     console.error('Error:', error);
                     alert('Error correcting SQL query. Please try again.');
                 });
